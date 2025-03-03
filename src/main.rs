@@ -26,6 +26,9 @@ impl Canvas {
     }
 
     pub fn set_pixel(&mut self, x: usize, y: usize, color: Color) {
+        if x >= Self::WIDTH || y >= Self::HEIGHT {
+            return;
+        }
         self.pixels[(x * Self::HEIGHT) + y] = color;
     }
 }
@@ -38,8 +41,8 @@ async fn main() {
         clear_background(BLACK);
         pixels.draw();
 
-        for x in (0..150).step_by(2) {
-            for y in (0..150).step_by(2) {
+        for x in (0..100).step_by(2) {
+            for y in (0..100).step_by(2) {
                 pixels.set_pixel(x, y, BLUE);
             }
         }
