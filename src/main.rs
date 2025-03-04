@@ -1,3 +1,5 @@
+use std::f64::consts::PI;
+
 use macroquad::prelude::*;
 
 pub struct Canvas {
@@ -53,7 +55,7 @@ fn cube() -> Vec<Vec3> {
 #[macroquad::main("Prism")]
 async fn main() {
     let mut canvas = Canvas::new();
-    let mut angle = 0.;
+    let mut angle = 0f32;
 
     loop {
         clear_background(BLACK);
@@ -64,12 +66,19 @@ async fn main() {
 
         let cube = cube()
             .iter()
-            .map(|v| Mat3::from_rotation_y(angle) * *v)
+            .map(|v| {
+                // rotates in y-axis.
+                vec3(
+                    v.x * angle.cos() - v.z * angle.sin(),
+                    v.y,
+                    v.x * angle.sin() + v.z * angle.cos(),
+                )
+            })
             .map(|v| vec2(v.x / (v.z + 10.), v.y / (v.z + 10.)))
             .map(|v| vec2(v.x * 50. + hw, v.y * 50. + hh))
             .collect::<Vec<Vec2>>();
 
-        angle += 0.05;
+        angle += get_frame_time();
 
         for v in cube {
             canvas.set_pixel(v.x as usize, v.y as usize, RED);
