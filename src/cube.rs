@@ -6,13 +6,12 @@ pub const CUBE_VERTICES: [Vec3; 8] = [
     vec3(-1.,  1., -1.),
     vec3( 1.,  1., -1.),
     vec3( 1., -1., -1.),
-    vec3(-1., -1., -1.),
-    vec3(-1.,  1., -1.),
-    vec3( 1.,  1., -1.),
-    vec3( 1., -1., -1.),
+    vec3(-1., -1.,  1.),
+    vec3(-1.,  1.,  1.),
+    vec3( 1.,  1.,  1.),
+    vec3( 1., -1.,  1.),
 ];
 
-#[rustfmt::skip]
 pub const CUBE_FACES: [(usize, usize, usize); 12] = [
     // Front
     (1, 2, 3),
@@ -31,5 +30,5 @@ pub const CUBE_FACES: [(usize, usize, usize); 12] = [
     (2, 5, 3),
     // Bottom
     (6, 8, 1),
-    (6, 1, 4)
+    (6, 1, 4),
 ];
