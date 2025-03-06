@@ -5,7 +5,7 @@ pub struct Canvas {
 }
 
 pub const WIDTH: usize = 256;
-pub const HEIGHT: usize = 256 * 3 / 4;
+pub const HEIGHT: usize = WIDTH * 3 / 4;
 const PIXEL_SIZE: f32 = 3.;
 
 impl Canvas {
@@ -34,5 +34,23 @@ impl Canvas {
             return;
         }
         self.pixels[(x * HEIGHT) + y] = color;
+    }
+
+    pub fn draw_line(&mut self, start: Vec2, end: Vec2, color: Color) {
+        let delta_x = end.x - start.x;
+        let delta_y = end.y - start.y;
+
+        let max_side_len = delta_x.abs().max(delta_y.abs());
+
+        let mut i = 0.;
+        loop {
+            if i >= max_side_len {
+                break;
+            }
+            let x = i * (delta_x / max_side_len) + start.x;
+            let y = i * (delta_y / max_side_len) + start.y;
+            self.set_pixel(x as usize, y as usize, color);
+            i += 1.;
+        }
     }
 }

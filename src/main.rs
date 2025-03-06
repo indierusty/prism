@@ -9,10 +9,17 @@ use prism::{
 async fn main() {
     let mut canvas = canvas::Canvas::new();
     let mut angle = 0.;
+    let mut scale = 50.;
 
     loop {
         clear_background(BLACK);
         canvas.clear();
+
+        if is_key_down(KeyCode::K) {
+            scale += 0.5;
+        } else if is_key_down(KeyCode::J) {
+            scale -= 0.5;
+        }
 
         let hw = (canvas::WIDTH / 2) as f32;
         let hh = (canvas::HEIGHT / 2) as f32;
@@ -28,12 +35,15 @@ async fn main() {
                 .iter()
                 .map(|v| Mat3::from_rotation_y(angle) * *v)
                 .map(|v| vec2(v.x / (v.z + 3.), v.y / (v.z + 3.)))
-                .map(|v| vec2(v.x * 50. + hw, v.y * 50. + hh))
+                .map(|v| vec2(v.x * scale + hw, v.y * scale + hh))
                 .collect::<Vec<Vec2>>();
 
-            for vertex in triangle {
+            for vertex in &triangle {
                 canvas.set_pixel(vertex.x as usize, vertex.y as usize, RED);
             }
+            canvas.draw_line(triangle[0], triangle[1], DARKGRAY);
+            canvas.draw_line(triangle[1], triangle[2], DARKGRAY);
+            canvas.draw_line(triangle[2], triangle[0], DARKGRAY);
         }
 
         canvas.draw();
