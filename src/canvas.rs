@@ -4,9 +4,9 @@ pub struct Canvas {
     pixels: [Color; WIDTH * HEIGHT],
 }
 
-pub const WIDTH: usize = 256;
+pub const WIDTH: usize = 350;
 pub const HEIGHT: usize = WIDTH * 3 / 4;
-const PIXEL_SIZE: f32 = 3.;
+const PIXEL_SIZE: f32 = 2.;
 
 impl Canvas {
     pub fn new() -> Self {
@@ -42,15 +42,16 @@ impl Canvas {
 
         let max_side_len = delta_x.abs().max(delta_y.abs());
 
-        let mut i = 0.;
-        loop {
-            if i >= max_side_len {
-                break;
-            }
-            let x = i * (delta_x / max_side_len) + start.x;
-            let y = i * (delta_y / max_side_len) + start.y;
-            self.set_pixel(x as usize, y as usize, color);
-            i += 1.;
+        let x_inc = delta_x / max_side_len;
+        let y_inc = delta_y / max_side_len;
+
+        let mut cur_x = start.x;
+        let mut cur_y = start.y;
+
+        for _ in 0..max_side_len as usize {
+            self.set_pixel(cur_x as usize, cur_y as usize, color);
+            cur_x += x_inc;
+            cur_y += y_inc;
         }
     }
 }
