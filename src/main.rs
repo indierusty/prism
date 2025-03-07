@@ -24,7 +24,9 @@ async fn main() {
         let hw = (canvas::WIDTH / 2) as f32;
         let hh = (canvas::HEIGHT / 2) as f32;
 
-        angle += 0.05;
+        if !is_key_down(KeyCode::Space) {
+            angle += get_frame_time();
+        }
 
         for t in CUBE_FACES {
             let a = CUBE_VERTICES[t.0];
@@ -38,9 +40,6 @@ async fn main() {
                 .map(|v| vec2(v.x * scale + hw, v.y * scale + hh))
                 .collect::<Vec<Vec2>>();
 
-            for vertex in &triangle {
-                canvas.set_pixel(vertex.x as usize, vertex.y as usize, RED);
-            }
             canvas.draw_line(triangle[0], triangle[1], DARKGRAY);
             canvas.draw_line(triangle[1], triangle[2], DARKGRAY);
             canvas.draw_line(triangle[2], triangle[0], DARKGRAY);
