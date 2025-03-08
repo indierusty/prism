@@ -16,8 +16,9 @@ fn conf() -> Conf {
 #[macroquad::main(conf)]
 async fn main() {
     let mut canvas = canvas::Canvas::new();
-    let mut scale = 50.;
-    let mut cube = PMesh::cube();
+    let mut scale = 100.;
+    let jet_obj = std::fs::read_to_string("assets/f22.obj").unwrap();
+    let mut jet = PMesh::from_obj(&jet_obj);
 
     loop {
         canvas.clear();
@@ -32,17 +33,17 @@ async fn main() {
         let hh = (canvas::HEIGHT / 2) as f32;
 
         if !is_key_down(KeyCode::Space) {
-            cube.rotation.y += 2. * get_frame_time();
+            jet.rotation.x += 2. * get_frame_time();
         }
 
-        for t in &cube.indices {
-            let a = cube.vertices[t.0];
-            let b = cube.vertices[t.1];
-            let c = cube.vertices[t.2];
+        for t in &jet.indices {
+            let a = jet.vertices[t.0 - 1];
+            let b = jet.vertices[t.1 - 1];
+            let c = jet.vertices[t.2 - 1];
 
             let triangle = [a, b, c]
                 .iter()
-                .map(|v| v.rotate_y(cube.rotation.y))
+                .map(|v| v.rotate_x(jet.rotation.x))
                 .map(|v| pvec3(v.x / (v.z + 3.), v.y / (v.z + 3.), v.z))
                 .map(|v| pvec3(v.x * scale + hw, v.y * scale + hh, v.z))
                 .collect::<Vec<PVec3>>();
