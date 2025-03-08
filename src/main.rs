@@ -1,31 +1,37 @@
 use macroquad::prelude::*;
 
-use prism::{
-    canvas,
-    cube::{CUBE_FACES, CUBE_VERTICES},
-};
+use prism::canvas::{self, HEIGHT, PIXEL_SIZE, WIDTH};
+use prism::cube::{CUBE_FACES, CUBE_VERTICES};
 
-#[macroquad::main("Prism")]
+fn conf() -> Conf {
+    Conf {
+        window_title: "Prism".to_string(),
+        window_width: (WIDTH * PIXEL_SIZE) as i32,
+        window_height: (HEIGHT * PIXEL_SIZE) as i32,
+        ..Default::default()
+    }
+}
+
+#[macroquad::main(conf)]
 async fn main() {
     let mut canvas = canvas::Canvas::new();
     let mut angle = 0.;
     let mut scale = 50.;
 
     loop {
-        clear_background(BLACK);
         canvas.clear();
 
         if is_key_down(KeyCode::K) {
-            scale += 0.5;
+            scale += 45. * get_frame_time();
         } else if is_key_down(KeyCode::J) {
-            scale -= 0.5;
+            scale -= 45. * get_frame_time();
         }
 
         let hw = (canvas::WIDTH / 2) as f32;
         let hh = (canvas::HEIGHT / 2) as f32;
 
         if !is_key_down(KeyCode::Space) {
-            angle += get_frame_time();
+            angle += 2. * get_frame_time();
         }
 
         for t in CUBE_FACES {

@@ -4,9 +4,17 @@ pub struct Canvas {
     pixels: Vec<Color>,
 }
 
+#[cfg(not(debug_assertions))]
+pub const WIDTH: usize = 900;
+#[cfg(not(debug_assertions))]
+pub const PIXEL_SIZE: usize = 1;
+
+#[cfg(debug_assertions)]
 pub const WIDTH: usize = 300;
+#[cfg(debug_assertions)]
+pub const PIXEL_SIZE: usize = 3;
+
 pub const HEIGHT: usize = WIDTH * 3 / 4;
-const PIXEL_SIZE: usize = 3;
 
 impl Canvas {
     pub fn new() -> Self {
