@@ -1,15 +1,15 @@
-use macroquad::prelude::*;
+use crate::pvector::{PVec3, pvec3};
 
 #[rustfmt::skip]
-pub const CUBE_VERTICES: [Vec3; 8] = [
-    vec3(-1., -1.,  1.),
-    vec3(-1.,  1.,  1.),
-    vec3( 1.,  1.,  1.),
-    vec3( 1., -1.,  1.),
-    vec3(-1., -1., -1.),
-    vec3(-1.,  1., -1.),
-    vec3( 1.,  1., -1.),
-    vec3( 1., -1., -1.),
+pub const CUBE_VERTICES: [PVec3; 8] = [
+    pvec3(-1., -1.,  1.),
+    pvec3(-1.,  1.,  1.),
+    pvec3( 1.,  1.,  1.),
+    pvec3( 1., -1.,  1.),
+    pvec3(-1., -1., -1.),
+    pvec3(-1.,  1., -1.),
+    pvec3( 1.,  1., -1.),
+    pvec3( 1., -1., -1.),
 ];
 
 pub const CUBE_FACES: [(usize, usize, usize); 12] = [

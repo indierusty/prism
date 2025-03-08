@@ -1,5 +1,7 @@
 use macroquad::prelude::*;
 
+use crate::pvector::PVec3;
+
 pub struct Canvas {
     pixels: Vec<Color>,
 }
@@ -59,7 +61,7 @@ impl Canvas {
         self.pixels[(y * WIDTH) + x] = color;
     }
 
-    pub fn draw_line(&mut self, start: Vec2, end: Vec2, color: Color) {
+    pub fn draw_line(&mut self, start: PVec3, end: PVec3, color: Color) {
         let delta_x = end.x - start.x;
         let delta_y = end.y - start.y;
 
