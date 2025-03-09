@@ -19,8 +19,8 @@ async fn main() {
     let mut scale = 5.;
     let jet_obj = std::fs::read_to_string("assets/f22.obj").unwrap();
     let mut jet = PMesh::from_obj(&jet_obj);
-    let camera = pvec3(0., 0., -25.);
-    let fov = 120.;
+    let camera = pvec3(0., 0., 0.);
+    let fov = 320.;
 
     let half_width = (canvas::WIDTH / 2) as f32;
     let half_height = (canvas::HEIGHT / 2) as f32;
@@ -47,7 +47,22 @@ async fn main() {
                 .iter()
                 .map(|v| v.rotate_x(jet.rotation.x))
                 .map(|v| v * scale) // scale the mesh
-                .map(|v| v - camera) // move the mesh away from the camera
+                .map(|v| v - pvec3(0., 0., 25.)) // move the mesh away from the camera
+                .collect::<Vec<PVec3>>();
+
+            let a_to_b = triangle[1] - triangle[0];
+            let a_to_c = triangle[2] - triangle[0];
+            let normal = a_to_b.cross(a_to_c);
+            let vertex_a_to_camera = camera - triangle[0];
+            let dot = normal.dot(vertex_a_to_camera);
+
+            // backface culling.
+            if dot < 0. {
+                continue;
+            }
+
+            let triangle = triangle
+                .into_iter()
                 .map(|v| v * fov / v.z) // project
                 .map(|v| v + pvec3(half_width, half_height, 0.)) // translate the mesh to move in mid on screen
                 .collect::<Vec<PVec3>>();
