@@ -1,4 +1,6 @@
-use std::ops::{Add, Mul, Sub};
+use std::ops::{Add, Div, Mul, Sub};
+
+use macroquad::math::Vec3;
 
 #[derive(Clone, Copy, Debug)]
 pub struct PVec3 {
@@ -41,6 +43,10 @@ impl PVec3 {
             z: self.z,
         }
     }
+
+    pub fn length(&self) -> f32 {
+        (self.x.powi(2) + self.y.powi(2) + self.z.powi(2)).sqrt()
+    }
 }
 
 impl Add<PVec3> for PVec3 {
@@ -48,9 +54,9 @@ impl Add<PVec3> for PVec3 {
 
     fn add(self, rhs: PVec3) -> Self::Output {
         PVec3 {
-            x: self.x + rhs.x,
-            y: self.y + rhs.y,
-            z: self.z + rhs.z,
+            x: self.x.add(rhs.x),
+            y: self.y.add(rhs.y),
+            z: self.z.add(rhs.z),
         }
     }
 }
@@ -60,9 +66,9 @@ impl Sub<PVec3> for PVec3 {
 
     fn sub(self, rhs: PVec3) -> Self::Output {
         PVec3 {
-            x: self.x - rhs.x,
-            y: self.y - rhs.y,
-            z: self.z - rhs.z,
+            x: self.x.sub(rhs.x),
+            y: self.y.sub(rhs.y),
+            z: self.z.sub(rhs.z),
         }
     }
 }
@@ -72,9 +78,21 @@ impl Mul<f32> for PVec3 {
 
     fn mul(self, rhs: f32) -> Self::Output {
         PVec3 {
-            x: self.x * rhs,
-            y: self.y * rhs,
-            z: self.z * rhs,
+            x: self.x.mul(rhs),
+            y: self.y.mul(rhs),
+            z: self.z.mul(rhs),
+        }
+    }
+}
+
+impl Div<f32> for PVec3 {
+    type Output = PVec3;
+
+    fn div(self, rhs: f32) -> Self::Output {
+        PVec3 {
+            x: self.x.div(rhs),
+            y: self.y.div(rhs),
+            z: self.z.div(rhs),
         }
     }
 }

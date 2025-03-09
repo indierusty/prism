@@ -16,24 +16,26 @@ fn conf() -> Conf {
 #[macroquad::main(conf)]
 async fn main() {
     let mut canvas = canvas::Canvas::new();
-    let mut scale = 100.;
+    let mut scale = 5.;
     let jet_obj = std::fs::read_to_string("assets/f22.obj").unwrap();
     let mut jet = PMesh::from_obj(&jet_obj);
+    let camera = pvec3(0., 0., -25.);
+    let fov = 120.;
+
+    let half_width = (canvas::WIDTH / 2) as f32;
+    let half_height = (canvas::HEIGHT / 2) as f32;
 
     loop {
         canvas.clear();
 
         if is_key_down(KeyCode::K) {
-            scale += 45. * get_frame_time();
+            scale += 5. * get_frame_time();
         } else if is_key_down(KeyCode::J) {
-            scale -= 45. * get_frame_time();
+            scale -= 5. * get_frame_time();
         }
 
-        let hw = (canvas::WIDTH / 2) as f32;
-        let hh = (canvas::HEIGHT / 2) as f32;
-
         if !is_key_down(KeyCode::Space) {
-            jet.rotation.x += 2. * get_frame_time();
+            jet.rotation.x += 3. * get_frame_time();
         }
 
         for t in &jet.indices {
@@ -44,8 +46,10 @@ async fn main() {
             let triangle = [a, b, c]
                 .iter()
                 .map(|v| v.rotate_x(jet.rotation.x))
-                .map(|v| pvec3(v.x / (v.z + 3.), v.y / (v.z + 3.), v.z))
-                .map(|v| pvec3(v.x * scale + hw, v.y * scale + hh, v.z))
+                .map(|v| v * scale) // scale the mesh
+                .map(|v| v - camera) // move the mesh away from the camera
+                .map(|v| v * fov / v.z) // project
+                .map(|v| v + pvec3(half_width, half_height, 0.)) // translate the mesh to move in mid on screen
                 .collect::<Vec<PVec3>>();
 
             canvas.draw_line(triangle[0], triangle[1], DARKGRAY);
