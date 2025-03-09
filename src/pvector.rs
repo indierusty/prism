@@ -1,7 +1,5 @@
 use std::ops::{Add, Div, Mul, Sub};
 
-use macroquad::math::Vec3;
-
 #[derive(Clone, Copy, Debug)]
 pub struct PVec3 {
     pub x: f32,
@@ -20,7 +18,7 @@ impl PVec3 {
         Self { x, y, z }
     }
 
-    pub fn rotate_x(&self, angle: f32) -> Self {
+    pub fn rotate_x(self, angle: f32) -> Self {
         Self {
             x: self.x,
             y: self.y * angle.cos() - self.z * angle.sin(),
@@ -28,7 +26,7 @@ impl PVec3 {
         }
     }
 
-    pub fn rotate_y(&self, angle: f32) -> Self {
+    pub fn rotate_y(self, angle: f32) -> Self {
         Self {
             x: self.x * angle.cos() - self.z * angle.sin(),
             y: self.y,
@@ -36,7 +34,7 @@ impl PVec3 {
         }
     }
 
-    pub fn rotate_z(&self, angle: f32) -> Self {
+    pub fn rotate_z(self, angle: f32) -> Self {
         Self {
             x: self.x * angle.cos() - self.y * angle.sin(),
             y: self.x * angle.sin() + self.y * angle.cos(),
@@ -44,8 +42,20 @@ impl PVec3 {
         }
     }
 
-    pub fn length(&self) -> f32 {
+    pub fn length(self) -> f32 {
         (self.x.powi(2) + self.y.powi(2) + self.z.powi(2)).sqrt()
+    }
+
+    pub fn cross(self, rhs: Self) -> Self {
+        Self {
+            x: self.y * rhs.z - rhs.y * self.z,
+            y: self.z * rhs.x - rhs.z * self.x,
+            z: self.x * rhs.y - rhs.x * self.y,
+        }
+    }
+
+    pub fn dot(self, rhs: Self) -> f32 {
+        self.x * rhs.x + self.y * rhs.y + self.z * rhs.z
     }
 }
 
