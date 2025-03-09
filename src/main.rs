@@ -20,7 +20,7 @@ async fn main() {
     let jet_obj = std::fs::read_to_string("assets/f22.obj").unwrap();
     let mut jet = PMesh::from_obj(&jet_obj);
     let camera = pvec3(0., 0., -25.);
-    let fov = 120.;
+    let fov = 320.;
 
     let half_width = (canvas::WIDTH / 2) as f32;
     let half_height = (canvas::HEIGHT / 2) as f32;

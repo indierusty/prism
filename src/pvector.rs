@@ -1,7 +1,5 @@
 use std::ops::{Add, Div, Mul, Sub};
 
-use macroquad::math::Vec3;
-
 #[derive(Clone, Copy, Debug)]
 pub struct PVec3 {
     pub x: f32,
