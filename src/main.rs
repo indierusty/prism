@@ -35,7 +35,7 @@ async fn main() {
         }
 
         if !is_key_down(KeyCode::Space) {
-            jet.rotation.x += 3. * get_frame_time();
+            jet.rotation.x += 1. * get_frame_time();
         }
 
         for t in &jet.indices {
@@ -66,6 +66,8 @@ async fn main() {
                 .map(|v| v * fov / v.z) // project
                 .map(|v| v + pvec3(half_width, half_height, 0.)) // translate the mesh to move in mid on screen
                 .collect::<Vec<PVec3>>();
+
+            canvas.draw_triangle(triangle[0], triangle[1], triangle[2], RED);
 
             canvas.draw_line(triangle[0], triangle[1], DARKGRAY);
             canvas.draw_line(triangle[1], triangle[2], DARKGRAY);

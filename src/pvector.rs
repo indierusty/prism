@@ -57,6 +57,15 @@ impl PVec3 {
     pub fn dot(self, rhs: Self) -> f32 {
         self.x * rhs.x + self.y * rhs.y + self.z * rhs.z
     }
+
+    pub fn normalize(self) -> Self {
+        let len = self.length();
+        Self {
+            x: self.x / len,
+            y: self.y / len,
+            z: self.z / len,
+        }
+    }
 }
 
 impl Add<PVec3> for PVec3 {
