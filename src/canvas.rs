@@ -1,6 +1,6 @@
 use macroquad::prelude::*;
 
-use crate::pvector::PVec3;
+use crate::pvector::{PVec3, pvec3};
 
 pub struct Canvas {
     pixels: Vec<Color>,
@@ -77,6 +77,73 @@ impl Canvas {
             self.set_pixel(cur_x as usize, cur_y as usize, color);
             cur_x += x_inc;
             cur_y += y_inc;
+        }
+    }
+
+    pub fn draw_triangle(&mut self, mut v1: PVec3, mut v2: PVec3, mut v3: PVec3, color: Color) {
+        // Sort the vertices based on y-axis in ascending order (v1.y <= v2.y <= v3.y).
+        if v2.y < v1.y {
+            std::mem::swap(&mut v1, &mut v2)
+        }
+        if v3.y < v1.y {
+            std::mem::swap(&mut v1, &mut v3);
+        }
+        if v3.y < v2.y {
+            std::mem::swap(&mut v2, &mut v3);
+        }
+
+        // TODO: make seperate fn and write test for this expression.
+        // Calculate the point which divides the triangle into two where the line with endpoint `mid` and `v2` is the bisector.
+        let mid_x = (v3.x - v1.x) * (v2.y - v1.y) / (v3.y - v1.y) + v1.x;
+        let mut mid = pvec3(mid_x, v2.y, 0.);
+
+        // `v2` vertex must be left to `mid` vertex required by draw_flat_bottom_triange and draw_flat_top_triangle function.
+        if mid.x < v2.x {
+            std::mem::swap(&mut mid, &mut v2);
+        }
+
+        self.draw_flat_bottom_triangle(v1, v2, mid, color);
+        self.draw_flat_top_triangle(v2, mid, v3, color);
+    }
+
+    /// The `v2` & `v3` is the flat bottom side vertices.
+    pub fn draw_flat_bottom_triangle(&mut self, v1: PVec3, v2: PVec3, v3: PVec3, color: Color) {
+        let inv_slope_1 = (v2.x - v1.x) / (v2.y - v1.y);
+        let inv_slope_2 = (v3.x - v1.x) / (v3.y - v1.y);
+
+        let start_y = v1.y as usize;
+        let end_y = v2.y as usize;
+
+        let mut start_x = v1.x;
+        let mut end_x = v1.x;
+
+        for y in start_y..end_y {
+            for x in start_x as usize..=end_x as usize {
+                // Draw the horizontal line.
+                self.set_pixel(x, y, color);
+            }
+            start_x += inv_slope_1;
+            end_x += inv_slope_2;
+        }
+    }
+
+    /// The `v1` & `v2` is the flat top side vertices.
+    pub fn draw_flat_top_triangle(&mut self, v1: PVec3, v2: PVec3, v3: PVec3, color: Color) {
+        let inv_slope_1 = (v3.x - v1.x) / (v3.y - v1.y);
+        let inv_slope_2 = (v3.x - v2.x) / (v3.y - v2.y);
+
+        let start_y = v1.y as usize;
+        let end_y = v3.y as usize;
+
+        let mut start_x = v1.x;
+        let mut end_x = v2.x;
+
+        for y in start_y..end_y {
+            for x in start_x as usize..=end_x as usize {
+                self.set_pixel(x, y, color);
+            }
+            start_x += inv_slope_1;
+            end_x += inv_slope_2;
         }
     }
 }
