@@ -118,7 +118,7 @@ impl Canvas {
         let mut end_x = v1.x;
 
         for y in start_y..end_y {
-            for x in start_x as usize..end_x as usize {
+            for x in start_x as usize..=end_x as usize {
                 // Draw the horizontal line.
                 self.set_pixel(x, y, color);
             }
@@ -139,7 +139,7 @@ impl Canvas {
         let mut end_x = v2.x;
 
         for y in start_y..end_y {
-            for x in start_x as usize..end_x as usize {
+            for x in start_x as usize..=end_x as usize {
                 self.set_pixel(x, y, color);
             }
             start_x += inv_slope_1;
