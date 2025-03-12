@@ -13,6 +13,11 @@ impl PVec3 {
         y: 0.,
         z: 0.,
     };
+    pub const ONE: Self = Self {
+        x: 1.,
+        y: 1.,
+        z: 1.,
+    };
 
     pub const fn new(x: f32, y: f32, z: f32) -> Self {
         Self { x, y, z }
