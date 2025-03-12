@@ -1,8 +1,9 @@
 use macroquad::prelude::*;
 
 use prism::canvas::{self, HEIGHT, PIXEL_SIZE, WIDTH};
+use prism::pmatrix::PMat4;
 use prism::pmesh::PMesh;
-use prism::pvector::{PVec3, pvec3};
+use prism::pvector::{PVec3, PVec4, pvec3};
 
 fn conf() -> Conf {
     Conf {
@@ -29,30 +30,54 @@ async fn main() {
         canvas.clear();
 
         if is_key_down(KeyCode::K) {
-            scale += 5. * get_frame_time();
+            scale += 25. * get_frame_time();
         } else if is_key_down(KeyCode::J) {
-            scale -= 5. * get_frame_time();
+            scale -= 25. * get_frame_time();
+        }
+        if is_key_down(KeyCode::A) {
+            jet.translation.x -= 25. * get_frame_time();
+        } else if is_key_down(KeyCode::D) {
+            jet.translation.x += 25. * get_frame_time();
+        } else if is_key_down(KeyCode::W) {
+            jet.translation.y -= 25. * get_frame_time();
+        } else if is_key_down(KeyCode::S) {
+            jet.translation.y += 25. * get_frame_time();
         }
 
         if !is_key_down(KeyCode::Space) {
             jet.rotation.x += 1. * get_frame_time();
         }
 
+        let scale_matrix = PMat4::from_scale(scale, scale, scale);
+        let translation_matrix =
+            PMat4::from_translation(jet.translation.x, jet.translation.y, jet.translation.z);
+        let rotation_matrix_x = PMat4::from_rotation_x(jet.rotation.x);
+        let rotation_matrix_y = PMat4::from_rotation_y(jet.rotation.y);
+        let rotation_matrix_z = PMat4::from_rotation_z(jet.rotation.z);
+
         for t in &jet.indices {
             let a = jet.vertices[t.0 - 1];
             let b = jet.vertices[t.1 - 1];
             let c = jet.vertices[t.2 - 1];
 
+            // Transforming the vertices.
             let triangle = [a, b, c]
                 .iter()
                 .map(|v| v.rotate_x(jet.rotation.x))
-                .map(|v| v * scale) // scale the mesh
+                .map(|v| PVec4::from(v))
+                .map(|v| scale_matrix * v) // scale the mesh
+                .map(|v| rotation_matrix_x * v) // apply rotation around x-axix
+                .map(|v| rotation_matrix_y * v) // apply rotation around y-axix
+                .map(|v| rotation_matrix_z * v) // apply rotation around z-axix
+                .map(|v| translation_matrix * v) // translate the vertices.
+                .map(|v| pvec3(v.x, v.y, v.z))
                 .map(|v| v - pvec3(0., 0., 25.)) // move the mesh away from the camera
                 .collect::<Vec<PVec3>>();
 
+            // Backface culling
             let a_to_b = triangle[1] - triangle[0];
             let a_to_c = triangle[2] - triangle[0];
-            let normal = a_to_b.cross(a_to_c);
+            let normal = a_to_b.normalize().cross(a_to_c.normalize()).normalize();
             let vertex_a_to_camera = camera - triangle[0];
             let dot = normal.dot(vertex_a_to_camera);
 
@@ -61,13 +86,14 @@ async fn main() {
                 continue;
             }
 
+            // Projecting the vertices.
             let triangle = triangle
                 .into_iter()
-                .map(|v| v * fov / v.z) // project
+                .map(|v| pvec3((v.x * fov) / v.z, (v.y * fov) / v.z, v.z)) // project
                 .map(|v| v + pvec3(half_width, half_height, 0.)) // translate the mesh to move in mid on screen
                 .collect::<Vec<PVec3>>();
 
-            canvas.draw_triangle(triangle[0], triangle[1], triangle[2], RED);
+            canvas.draw_triangle(triangle[0], triangle[1], triangle[2], GRAY);
 
             canvas.draw_line(triangle[0], triangle[1], DARKGRAY);
             canvas.draw_line(triangle[1], triangle[2], DARKGRAY);

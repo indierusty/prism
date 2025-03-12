@@ -73,7 +73,7 @@ impl Canvas {
         let mut cur_x = start.x;
         let mut cur_y = start.y;
 
-        for _ in 0..max_side_len as usize {
+        for _ in 0..=max_side_len as usize {
             self.set_pixel(cur_x as usize, cur_y as usize, color);
             cur_x += x_inc;
             cur_y += y_inc;

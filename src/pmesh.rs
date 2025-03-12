@@ -5,6 +5,8 @@ pub struct PMesh {
     pub vertices: Vec<PVec3>,
     pub indices: Vec<(usize, usize, usize)>,
     pub rotation: PVec3,
+    pub scale: PVec3,
+    pub translation: PVec3,
 }
 
 impl PMesh {
@@ -13,6 +15,8 @@ impl PMesh {
             vertices: CUBE_VERTICES.to_vec(),
             indices: CUBE_FACES.to_vec(),
             rotation: PVec3::ZERO,
+            scale: PVec3::ONE,
+            translation: PVec3::ZERO,
         }
     }
 
@@ -48,6 +52,8 @@ impl PMesh {
             vertices,
             indices,
             rotation: PVec3::ZERO,
+            scale: PVec3::ONE,
+            translation: PVec3::ZERO,
         }
     }
 }

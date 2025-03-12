@@ -14,6 +14,12 @@ impl PVec3 {
         z: 0.,
     };
 
+    pub const ONE: Self = Self {
+        x: 1.,
+        y: 1.,
+        z: 1.,
+    };
+
     pub const fn new(x: f32, y: f32, z: f32) -> Self {
         Self { x, y, z }
     }
@@ -118,4 +124,23 @@ impl Div<f32> for PVec3 {
 
 pub const fn pvec3(x: f32, y: f32, z: f32) -> PVec3 {
     PVec3 { x, y, z }
+}
+
+#[derive(Clone, Copy, Debug)]
+pub struct PVec4 {
+    pub x: f32,
+    pub y: f32,
+    pub z: f32,
+    pub w: f32,
+}
+
+impl From<PVec3> for PVec4 {
+    fn from(value: PVec3) -> Self {
+        Self {
+            x: value.x,
+            y: value.y,
+            z: value.z,
+            w: 1.,
+        }
+    }
 }
