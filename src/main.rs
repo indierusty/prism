@@ -55,6 +55,12 @@ async fn main() {
         let rotation_matrix_y = PMat4::from_rotation_y(jet.rotation.y);
         let rotation_matrix_z = PMat4::from_rotation_z(jet.rotation.z);
 
+        let world_matrix = translation_matrix
+            * rotation_matrix_x
+            * rotation_matrix_y
+            * rotation_matrix_z
+            * scale_matrix;
+
         for t in &jet.indices {
             let a = jet.vertices[t.0 - 1];
             let b = jet.vertices[t.1 - 1];
@@ -65,11 +71,7 @@ async fn main() {
                 .iter()
                 .map(|v| v.rotate_x(jet.rotation.x))
                 .map(|v| PVec4::from(v))
-                .map(|v| scale_matrix * v) // scale the mesh
-                .map(|v| rotation_matrix_x * v) // apply rotation around x-axix
-                .map(|v| rotation_matrix_y * v) // apply rotation around y-axix
-                .map(|v| rotation_matrix_z * v) // apply rotation around z-axix
-                .map(|v| translation_matrix * v) // translate the vertices.
+                .map(|v| world_matrix * v) // scale the mesh
                 .map(|v| pvec3(v.x, v.y, v.z))
                 .map(|v| v - pvec3(0., 0., 25.)) // move the mesh away from the camera
                 .collect::<Vec<PVec3>>();
