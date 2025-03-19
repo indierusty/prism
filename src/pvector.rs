@@ -144,3 +144,7 @@ impl From<PVec3> for PVec4 {
         }
     }
 }
+
+pub const fn pvec4(x: f32, y: f32, z: f32, w: f32) -> PVec4 {
+    PVec4 { x, y, z, w }
+}

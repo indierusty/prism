@@ -1,7 +1,9 @@
+use std::f32::consts::PI;
+
 use macroquad::prelude::*;
 
 use prism::canvas::{self, HEIGHT, PIXEL_SIZE, WIDTH};
-use prism::pmatrix::PMat4;
+use prism::pmatrix::{PMat4, project_vec4};
 use prism::pmesh::PMesh;
 use prism::pvector::{PVec3, PVec4, pvec3};
 
@@ -18,13 +20,18 @@ fn conf() -> Conf {
 async fn main() {
     let mut canvas = canvas::Canvas::new();
     let mut scale = 5.;
-    let jet_obj = std::fs::read_to_string("assets/f22.obj").unwrap();
+    let jet_obj = std::fs::read_to_string("assets/cube.obj").unwrap();
     let mut jet = PMesh::from_obj(&jet_obj);
     let camera = pvec3(0., 0., 0.);
-    let fov = 320.;
 
     let half_width = (canvas::WIDTH / 2) as f32;
     let half_height = (canvas::HEIGHT / 2) as f32;
+
+    let fov = PI / 2.;
+    let aspect = HEIGHT as f32 / WIDTH as f32;
+    let znear = 0.1;
+    let zfar = 100.;
+    let prespective_matrix = PMat4::make_perspective(fov, aspect, znear, zfar);
 
     loop {
         canvas.clear();
@@ -46,6 +53,7 @@ async fn main() {
 
         if !is_key_down(KeyCode::Space) {
             jet.rotation.x += 1. * get_frame_time();
+            jet.rotation.y += 1. * get_frame_time();
         }
 
         let scale_matrix = PMat4::from_scale(scale, scale, scale);
@@ -69,11 +77,9 @@ async fn main() {
             // Transforming the vertices.
             let triangle = [a, b, c]
                 .iter()
-                .map(|v| v.rotate_x(jet.rotation.x))
-                .map(|v| PVec4::from(v))
+                .map(|v| PVec4::from(*v))
                 .map(|v| world_matrix * v) // scale the mesh
                 .map(|v| pvec3(v.x, v.y, v.z))
-                .map(|v| v - pvec3(0., 0., 25.)) // move the mesh away from the camera
                 .collect::<Vec<PVec3>>();
 
             // Backface culling
@@ -84,14 +90,16 @@ async fn main() {
             let dot = normal.dot(vertex_a_to_camera);
 
             // backface culling.
-            if dot < 0. {
-                continue;
-            }
+            // if dot > 0. {
+            //     continue;
+            // }
 
             // Projecting the vertices.
             let triangle = triangle
                 .into_iter()
-                .map(|v| pvec3((v.x * fov) / v.z, (v.y * fov) / v.z, v.z)) // project
+                .map(|v| PVec4::from(v))
+                .map(|v| project_vec4(prespective_matrix, v)) // project
+                .map(|v| pvec3(v.x, v.y, v.z))
                 .map(|v| v + pvec3(half_width, half_height, 0.)) // translate the mesh to move in mid on screen
                 .collect::<Vec<PVec3>>();
 

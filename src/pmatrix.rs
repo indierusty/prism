@@ -8,6 +8,8 @@ pub struct PMat4 {
 }
 
 impl PMat4 {
+    pub const ZERO: Self = Self { m: [[0.; 4]; 4] };
+
     pub fn new(m: [[f32; 4]; 4]) -> Self {
         Self { m }
     }
@@ -91,6 +93,28 @@ impl PMat4 {
             ],
         }
     }
+
+    pub fn make_perspective(fov: f32, aspect: f32, znear: f32, zfar: f32) -> Self {
+        let mut identity = Self::ZERO;
+        identity.m[0][0] = aspect * (1. / (fov / 2.).tan());
+        identity.m[1][1] = 1. / (fov / 2.).tan();
+        identity.m[2][2] = zfar / (zfar - znear);
+        identity.m[2][3] = (-zfar * znear) / (zfar - znear);
+        identity.m[3][3] = 1.0; // to record the z value of the vector in w value.
+        identity
+    }
+}
+
+pub fn project_vec4(projection_mat: PMat4, vertex: PVec4) -> PVec4 {
+    let mut res = projection_mat * vertex;
+
+    if res.w != 0. {
+        res.x /= res.w;
+        res.y /= res.w;
+        res.z /= res.w;
+    }
+
+    res
 }
 
 impl Mul<PVec4> for PMat4 {
