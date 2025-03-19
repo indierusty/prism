@@ -20,12 +20,12 @@ async fn main() {
     let mut scale = 5.;
     let jet_obj = std::fs::read_to_string("assets/f22.obj").unwrap();
     let mut jet = PMesh::from_obj(&jet_obj);
-    let camera = vec3(0., 0., -1100.);
+    let camera = vec3(0., 0., -100.);
 
     let half_width = (canvas::WIDTH / 2) as f32;
     let half_height = (canvas::HEIGHT / 2) as f32;
 
-    let fov = PI / 5.;
+    let fov = PI / 3.;
     let aspect_ratio = HEIGHT as f32 / WIDTH as f32;
     let z_near = 0.1;
     let z_far = 100.;
@@ -53,10 +53,11 @@ async fn main() {
         }
 
         if !is_key_down(KeyCode::Space) {
-            jet.rotation.x += 1. * get_frame_time();
+            jet.rotation.y += 1. * get_frame_time();
         }
 
         let scale_matrix = Mat4::from_scale(vec3(scale, scale, scale));
+        let inv_camera_matrix = Mat4::from_translation(camera).inverse();
         let translation_matrix = Mat4::from_translation(vec3(
             jet.translation.x,
             jet.translation.y,
@@ -66,7 +67,8 @@ async fn main() {
         let rotation_matrix_y = Mat4::from_rotation_y(jet.rotation.y);
         let rotation_matrix_z = Mat4::from_rotation_z(jet.rotation.z);
 
-        let world_matrix = translation_matrix
+        let world_matrix = inv_camera_matrix
+            * translation_matrix
             * rotation_matrix_x
             * rotation_matrix_y
             * rotation_matrix_z
