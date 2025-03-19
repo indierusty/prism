@@ -1,7 +1,5 @@
 use macroquad::prelude::*;
 
-use crate::pvector::{PVec3, pvec3};
-
 pub struct Canvas {
     pixels: Vec<Color>,
 }
@@ -61,7 +59,7 @@ impl Canvas {
         self.pixels[(y * WIDTH) + x] = color;
     }
 
-    pub fn draw_line(&mut self, start: PVec3, end: PVec3, color: Color) {
+    pub fn draw_line(&mut self, start: Vec2, end: Vec2, color: Color) {
         let delta_x = end.x - start.x;
         let delta_y = end.y - start.y;
 
@@ -80,7 +78,13 @@ impl Canvas {
         }
     }
 
-    pub fn draw_triangle(&mut self, mut v1: PVec3, mut v2: PVec3, mut v3: PVec3, color: Color) {
+    pub fn draw_triangle_lines(&mut self, v1: Vec2, v2: Vec2, v3: Vec2, color: Color) {
+        self.draw_line(v1, v2, color);
+        self.draw_line(v2, v3, color);
+        self.draw_line(v3, v1, color);
+    }
+
+    pub fn draw_triangle(&mut self, mut v1: Vec2, mut v2: Vec2, mut v3: Vec2, color: Color) {
         // Sort the vertices based on y-axis in ascending order (v1.y <= v2.y <= v3.y).
         if v2.y < v1.y {
             std::mem::swap(&mut v1, &mut v2)
@@ -95,7 +99,7 @@ impl Canvas {
         // TODO: make seperate fn and write test for this expression.
         // Calculate the point which divides the triangle into two where the line with endpoint `mid` and `v2` is the bisector.
         let mid_x = (v3.x - v1.x) * (v2.y - v1.y) / (v3.y - v1.y) + v1.x;
-        let mut mid = pvec3(mid_x, v2.y, 0.);
+        let mut mid = vec2(mid_x, v2.y);
 
         // `v2` vertex must be left to `mid` vertex required by draw_flat_bottom_triange and draw_flat_top_triangle function.
         if mid.x < v2.x {
@@ -107,7 +111,7 @@ impl Canvas {
     }
 
     /// The `v2` & `v3` is the flat bottom side vertices.
-    pub fn draw_flat_bottom_triangle(&mut self, v1: PVec3, v2: PVec3, v3: PVec3, color: Color) {
+    pub fn draw_flat_bottom_triangle(&mut self, v1: Vec2, v2: Vec2, v3: Vec2, color: Color) {
         let inv_slope_1 = (v2.x - v1.x) / (v2.y - v1.y);
         let inv_slope_2 = (v3.x - v1.x) / (v3.y - v1.y);
 
@@ -128,7 +132,7 @@ impl Canvas {
     }
 
     /// The `v1` & `v2` is the flat top side vertices.
-    pub fn draw_flat_top_triangle(&mut self, v1: PVec3, v2: PVec3, v3: PVec3, color: Color) {
+    pub fn draw_flat_top_triangle(&mut self, v1: Vec2, v2: Vec2, v3: Vec2, color: Color) {
         let inv_slope_1 = (v3.x - v1.x) / (v3.y - v1.y);
         let inv_slope_2 = (v3.x - v2.x) / (v3.y - v2.y);
 

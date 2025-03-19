@@ -3,9 +3,7 @@ use std::f32::consts::PI;
 use macroquad::prelude::*;
 
 use prism::canvas::{self, HEIGHT, PIXEL_SIZE, WIDTH};
-use prism::pmatrix::{PMat4, project_vec4};
 use prism::pmesh::PMesh;
-use prism::pvector::{PVec3, PVec4, pvec3};
 
 fn conf() -> Conf {
     Conf {
@@ -20,20 +18,23 @@ fn conf() -> Conf {
 async fn main() {
     let mut canvas = canvas::Canvas::new();
     let mut scale = 5.;
-    let jet_obj = std::fs::read_to_string("assets/cube.obj").unwrap();
+    let jet_obj = std::fs::read_to_string("assets/f22.obj").unwrap();
     let mut jet = PMesh::from_obj(&jet_obj);
-    let camera = pvec3(0., 0., 0.);
+    let camera = vec3(0., 0., -1100.);
 
     let half_width = (canvas::WIDTH / 2) as f32;
     let half_height = (canvas::HEIGHT / 2) as f32;
 
-    let fov = PI / 2.;
-    let aspect = HEIGHT as f32 / WIDTH as f32;
-    let znear = 0.1;
-    let zfar = 100.;
-    let prespective_matrix = PMat4::make_perspective(fov, aspect, znear, zfar);
+    let fov = PI / 5.;
+    let aspect_ratio = HEIGHT as f32 / WIDTH as f32;
+    let z_near = 0.1;
+    let z_far = 100.;
+    let prespective_matrix = Mat4::perspective_lh(fov, aspect_ratio, z_near, z_far);
+
+    println!("jet ==> {:?}", jet.indices.len());
 
     loop {
+        clear_background(WHITE);
         canvas.clear();
 
         if is_key_down(KeyCode::K) {
@@ -53,15 +54,17 @@ async fn main() {
 
         if !is_key_down(KeyCode::Space) {
             jet.rotation.x += 1. * get_frame_time();
-            jet.rotation.y += 1. * get_frame_time();
         }
 
-        let scale_matrix = PMat4::from_scale(scale, scale, scale);
-        let translation_matrix =
-            PMat4::from_translation(jet.translation.x, jet.translation.y, jet.translation.z);
-        let rotation_matrix_x = PMat4::from_rotation_x(jet.rotation.x);
-        let rotation_matrix_y = PMat4::from_rotation_y(jet.rotation.y);
-        let rotation_matrix_z = PMat4::from_rotation_z(jet.rotation.z);
+        let scale_matrix = Mat4::from_scale(vec3(scale, scale, scale));
+        let translation_matrix = Mat4::from_translation(vec3(
+            jet.translation.x,
+            jet.translation.y,
+            jet.translation.z,
+        ));
+        let rotation_matrix_x = Mat4::from_rotation_x(jet.rotation.x);
+        let rotation_matrix_y = Mat4::from_rotation_y(jet.rotation.y);
+        let rotation_matrix_z = Mat4::from_rotation_z(jet.rotation.z);
 
         let world_matrix = translation_matrix
             * rotation_matrix_x
@@ -69,45 +72,51 @@ async fn main() {
             * rotation_matrix_z
             * scale_matrix;
 
+        let mut faces = Vec::new();
+        let mut normal_rays = Vec::new();
+
         for t in &jet.indices {
-            let a = jet.vertices[t.0 - 1];
-            let b = jet.vertices[t.1 - 1];
-            let c = jet.vertices[t.2 - 1];
+            let v1 = jet.vertices[t.0 - 1];
+            let v2 = jet.vertices[t.1 - 1];
+            let v3 = jet.vertices[t.2 - 1];
 
             // Transforming the vertices.
-            let triangle = [a, b, c]
-                .iter()
-                .map(|v| PVec4::from(*v))
-                .map(|v| world_matrix * v) // scale the mesh
-                .map(|v| pvec3(v.x, v.y, v.z))
-                .collect::<Vec<PVec3>>();
+            let ts = |v: Vec3| (world_matrix * vec4(v.x, v.y, v.z, 1.)).xyz();
+
+            let (v1, v2, v3) = (ts(v1), ts(v2), ts(v3));
 
             // Backface culling
-            let a_to_b = triangle[1] - triangle[0];
-            let a_to_c = triangle[2] - triangle[0];
-            let normal = a_to_b.normalize().cross(a_to_c.normalize()).normalize();
-            let vertex_a_to_camera = camera - triangle[0];
-            let dot = normal.dot(vertex_a_to_camera);
+            let a_to_b = (v2 - v1).normalize();
+            let a_to_c = (v3 - v1).normalize();
+            let normal = a_to_b.cross(a_to_c).normalize();
+            let camera_ray = camera - v1;
+            let dot = normal.dot(camera_ray);
 
             // backface culling.
-            // if dot > 0. {
-            //     continue;
-            // }
+            if dot > 0. {
+                continue;
+            }
 
+            let project = |v: Vec3| {
+                prespective_matrix * vec4(v.x, v.y, v.z, 1.) + vec4(half_width, half_height, 0., 0.)
+            };
             // Projecting the vertices.
-            let triangle = triangle
-                .into_iter()
-                .map(|v| PVec4::from(v))
-                .map(|v| project_vec4(prespective_matrix, v)) // project
-                .map(|v| pvec3(v.x, v.y, v.z))
-                .map(|v| v + pvec3(half_width, half_height, 0.)) // translate the mesh to move in mid on screen
-                .collect::<Vec<PVec3>>();
+            let (v1, v2, v3) = (project(v1).xyz(), project(v2).xyz(), project(v3).xyz());
 
-            canvas.draw_triangle(triangle[0], triangle[1], triangle[2], GRAY);
+            normal_rays.push((v1, normal));
+            faces.push((v1, v2, v3))
+        }
 
-            canvas.draw_line(triangle[0], triangle[1], DARKGRAY);
-            canvas.draw_line(triangle[1], triangle[2], DARKGRAY);
-            canvas.draw_line(triangle[2], triangle[0], DARKGRAY);
+        for (v1, v2, v3) in &faces {
+            canvas.draw_triangle(v1.xy(), v2.xy(), v3.xy(), GRAY);
+        }
+        for (v1, v2, v3) in &faces {
+            canvas.draw_triangle_lines(v1.xy(), v2.xy(), v3.xy(), DARKGRAY);
+        }
+
+        for (vertex, normal) in normal_rays {
+            let normal_ray = vertex + (normal * scale);
+            canvas.draw_line(vertex.xy(), normal_ray.xy(), RED);
         }
 
         canvas.draw();
