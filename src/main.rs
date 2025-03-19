@@ -17,10 +17,10 @@ fn conf() -> Conf {
 #[macroquad::main(conf)]
 async fn main() {
     let mut canvas = canvas::Canvas::new();
-    let mut scale = 5.;
+    let mut scale = 45.;
     let jet_obj = std::fs::read_to_string("assets/f22.obj").unwrap();
     let mut jet = PMesh::from_obj(&jet_obj);
-    let camera = vec3(0., 0., -100.);
+    let camera = vec3(0., 0., -1000.);
 
     let half_width = (canvas::WIDTH / 2) as f32;
     let half_height = (canvas::HEIGHT / 2) as f32;
@@ -31,11 +31,23 @@ async fn main() {
     let z_far = 100.;
     let prespective_matrix = Mat4::perspective_lh(fov, aspect_ratio, z_near, z_far);
 
-    println!("jet ==> {:?}", jet.indices.len());
+    let mut draw_face = true;
+    let mut draw_wireframe = true;
+    let mut draw_normals = false;
 
     loop {
         clear_background(WHITE);
         canvas.clear();
+
+        if is_key_pressed(KeyCode::F) {
+            draw_face = !draw_face;
+        }
+        if is_key_pressed(KeyCode::L) {
+            draw_wireframe = !draw_wireframe;
+        }
+        if is_key_pressed(KeyCode::N) {
+            draw_normals = !draw_normals;
+        }
 
         if is_key_down(KeyCode::K) {
             scale += 25. * get_frame_time();
@@ -109,16 +121,22 @@ async fn main() {
             faces.push((v1, v2, v3))
         }
 
-        for (v1, v2, v3) in &faces {
-            canvas.draw_triangle(v1.xy(), v2.xy(), v3.xy(), GRAY);
+        if draw_face {
+            for (v1, v2, v3) in &faces {
+                canvas.draw_triangle(v1.xy(), v2.xy(), v3.xy(), GRAY);
+            }
         }
-        for (v1, v2, v3) in &faces {
-            canvas.draw_triangle_lines(v1.xy(), v2.xy(), v3.xy(), DARKGRAY);
+        if draw_wireframe {
+            for (v1, v2, v3) in &faces {
+                canvas.draw_triangle_lines(v1.xy(), v2.xy(), v3.xy(), DARKGRAY);
+            }
         }
 
-        for (vertex, normal) in normal_rays {
-            let normal_ray = vertex + (normal * scale);
-            canvas.draw_line(vertex.xy(), normal_ray.xy(), RED);
+        if draw_normals {
+            for (vertex, normal) in normal_rays {
+                let normal_ray = vertex + (normal * scale);
+                canvas.draw_line(vertex.xy(), normal_ray.xy(), RED);
+            }
         }
 
         canvas.draw();
