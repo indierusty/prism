@@ -22,7 +22,7 @@ async fn main() {
     let mut jet = PMesh::from_obj(&jet_obj);
     jet.translation.z = 25.; // move a bit away from camera
     let camera = vec3(0., 0., 0.);
-    let light = Light::new(vec3(1., 1., 1.));
+    let light = Light::new(vec3(0., 0., 1.));
 
     let half_width = (canvas::WIDTH / 2) as f32;
     let half_height = (canvas::HEIGHT / 2) as f32;
@@ -63,7 +63,7 @@ async fn main() {
 
         if !is_key_down(KeyCode::Space) {
             // jet.rotation.y += 1. * get_frame_time();
-            jet.rotation.x += 1. * get_frame_time();
+            jet.rotation.x += 0.5 * get_frame_time();
         }
 
         let scale_matrix = Mat4::from_scale(vec3(jet.scale.x, jet.scale.y, jet.scale.z));
@@ -93,22 +93,36 @@ async fn main() {
 
             let to_vec4 = |v: Vec3| vec4(v.x, v.y, v.z, 1.);
 
+            //# Apply transformations
             let v1 = (world_matrix * to_vec4(v1)).xyz();
             let v2 = (world_matrix * to_vec4(v2)).xyz();
             let v3 = (world_matrix * to_vec4(v3)).xyz();
 
+            //# Backface culling
             let v1v2 = (v2 - v1).normalize();
             let v1v3 = (v3 - v1).normalize();
             let normal = v1v2.cross(v1v3).normalize();
             let camera_ray = camera - v1;
             let dot = normal.dot(camera_ray);
 
-            // backface culling
-            // FIX: it should be `dot < 0.`.
             if dot < 0. {
                 continue;
             }
 
+            //# Apply flat shading.
+            // Reverse direction of the light
+            let light = light.direction().normalize() * -1.;
+            // Calculate the % the normal and light pointing in the same direction [0, 1] using dot product.
+            // Ignoring the negative values i.e when normal is pointing to opposite direction to the light.
+            let intensity_factor = light.dot(normal).min(1.).max(0.);
+            let color = Color {
+                r: color.r * intensity_factor,
+                g: color.g * intensity_factor,
+                b: color.b * intensity_factor,
+                a: color.a,
+            };
+
+            //# Perspective Projection.
             let project = |v: Vec4| {
                 let v = projection_matrix * v;
                 let v = v / v.w;
