@@ -8,4 +8,8 @@ impl Light {
     pub fn new(direction: Vec3) -> Self {
         Self { direction }
     }
+
+    pub fn direction(&self) -> Vec3 {
+        self.direction
+    }
 }

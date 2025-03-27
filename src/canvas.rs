@@ -23,8 +23,8 @@ impl Canvas {
         }
     }
 
-    pub fn clear(&mut self) {
-        self.pixels = [WHITE; WIDTH * HEIGHT].to_vec();
+    pub fn clear(&mut self, color: Color) {
+        self.pixels.fill(color);
     }
 
     pub fn draw(&self) {
@@ -52,11 +52,13 @@ impl Canvas {
         );
     }
 
-    pub fn set_pixel(&mut self, x: usize, y: usize, color: Color) {
-        if x >= WIDTH || y >= HEIGHT {
+    pub fn set_pixel(&mut self, x: f32, y: f32, color: Color) {
+        let x = x.floor();
+        let y = y.floor();
+        if x < 0. || x >= WIDTH as f32 || y < 0. || y >= HEIGHT as f32 {
             return;
         }
-        self.pixels[(y * WIDTH) + x] = color;
+        self.pixels[(y as usize * WIDTH) + x as usize] = color;
     }
 
     pub fn draw_line(&mut self, start: Vec2, end: Vec2, color: Color) {
@@ -72,7 +74,7 @@ impl Canvas {
         let mut cur_y = start.y;
 
         for _ in 0..=max_side_len as usize {
-            self.set_pixel(cur_x as usize, cur_y as usize, color);
+            self.set_pixel(cur_x, cur_y, color);
             cur_x += x_inc;
             cur_y += y_inc;
         }
@@ -110,44 +112,53 @@ impl Canvas {
         self.draw_flat_top_triangle(v2, mid, v3, color);
     }
 
+    // TODO: improve precision
     /// The `v2` & `v3` is the flat bottom side vertices.
     pub fn draw_flat_bottom_triangle(&mut self, v1: Vec2, v2: Vec2, v3: Vec2, color: Color) {
         let inv_slope_1 = (v2.x - v1.x) / (v2.y - v1.y);
         let inv_slope_2 = (v3.x - v1.x) / (v3.y - v1.y);
 
-        let start_y = v1.y as usize;
-        let end_y = v2.y as usize;
+        let sy = v1.y; // start y
+        let ey = v2.y; // end y
 
-        let mut start_x = v1.x;
-        let mut end_x = v1.x;
+        let mut sx = v1.x; // start x
+        let mut ex = v1.x; // end x
 
-        for y in start_y..end_y {
-            for x in start_x as usize..=end_x as usize {
-                // Draw the horizontal line.
-                self.set_pixel(x, y, color);
+        let mut yi = sy;
+        while yi <= ey {
+            let mut xi = sx;
+            while xi <= ex {
+                self.set_pixel(xi, yi, color);
+                xi += 1.;
             }
-            start_x += inv_slope_1;
-            end_x += inv_slope_2;
+            sx += inv_slope_1;
+            ex += inv_slope_2;
+            yi += 1.;
         }
     }
 
+    // TODO: improve precision
     /// The `v1` & `v2` is the flat top side vertices.
     pub fn draw_flat_top_triangle(&mut self, v1: Vec2, v2: Vec2, v3: Vec2, color: Color) {
         let inv_slope_1 = (v3.x - v1.x) / (v3.y - v1.y);
         let inv_slope_2 = (v3.x - v2.x) / (v3.y - v2.y);
 
-        let start_y = v1.y as usize;
-        let end_y = v3.y as usize;
+        let sy = v1.y; // start y
+        let ey = v3.y; // end y
 
-        let mut start_x = v1.x;
-        let mut end_x = v2.x;
+        let mut sx = v1.x; // start x
+        let mut ex = v2.x; // end x
 
-        for y in start_y..end_y {
-            for x in start_x as usize..=end_x as usize {
-                self.set_pixel(x, y, color);
+        let mut yi = sy;
+        while yi <= ey {
+            let mut xi = sx;
+            while xi <= ex {
+                self.set_pixel(xi, yi, color);
+                xi += 1.;
             }
-            start_x += inv_slope_1;
-            end_x += inv_slope_2;
+            sx += inv_slope_1;
+            ex += inv_slope_2;
+            yi += 1.;
         }
     }
 }

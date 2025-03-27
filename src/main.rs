@@ -22,7 +22,7 @@ async fn main() {
     let mut jet = PMesh::from_obj(&jet_obj);
     jet.translation.z = 25.; // move a bit away from camera
     let camera = vec3(0., 0., 0.);
-    let light = Light::new(vec3(0., 0., 1.));
+    let light = Light::new(vec3(1., 1., 1.));
 
     let half_width = (canvas::WIDTH / 2) as f32;
     let half_height = (canvas::HEIGHT / 2) as f32;
@@ -39,7 +39,7 @@ async fn main() {
 
     loop {
         clear_background(WHITE);
-        canvas.clear();
+        canvas.clear(BLACK);
 
         if is_key_pressed(KeyCode::F) {
             draw_face = !draw_face;
@@ -62,7 +62,7 @@ async fn main() {
         }
 
         if !is_key_down(KeyCode::Space) {
-            jet.rotation.y += 1. * get_frame_time();
+            // jet.rotation.y += 1. * get_frame_time();
             jet.rotation.x += 1. * get_frame_time();
         }
 
@@ -105,7 +105,7 @@ async fn main() {
 
             // backface culling
             // FIX: it should be `dot < 0.`.
-            if dot > 0. {
+            if dot < 0. {
                 continue;
             }
 
@@ -125,7 +125,7 @@ async fn main() {
 
         if draw_face {
             for (v1, v2, v3, color) in &faces {
-                canvas.draw_triangle(v1.xy(), v2.xy(), v3.xy(), GRAY);
+                canvas.draw_triangle(v1.xy(), v2.xy(), v3.xy(), *color);
             }
         }
         if draw_wireframe {
