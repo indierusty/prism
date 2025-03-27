@@ -3,6 +3,7 @@ use std::f32::consts::PI;
 use macroquad::prelude::*;
 
 use prism::canvas::{self, HEIGHT, PIXEL_SIZE, WIDTH};
+use prism::light::Light;
 use prism::pmesh::PMesh;
 
 fn conf() -> Conf {
@@ -17,19 +18,20 @@ fn conf() -> Conf {
 #[macroquad::main(conf)]
 async fn main() {
     let mut canvas = canvas::Canvas::new();
-    let mut scale = 45.;
     let jet_obj = std::fs::read_to_string("assets/f22.obj").unwrap();
     let mut jet = PMesh::from_obj(&jet_obj);
-    let camera = vec3(0., 0., -1000.);
+    jet.translation.z = 25.; // move a bit away from camera
+    let camera = vec3(0., 0., 0.);
+    let light = Light::new(vec3(0., 0., 1.));
 
     let half_width = (canvas::WIDTH / 2) as f32;
     let half_height = (canvas::HEIGHT / 2) as f32;
 
-    let fov = PI / 3.;
+    let fov = PI / 3.; // 60 degress.
     let aspect_ratio = HEIGHT as f32 / WIDTH as f32;
     let z_near = 0.1;
     let z_far = 100.;
-    let prespective_matrix = Mat4::perspective_lh(fov, aspect_ratio, z_near, z_far);
+    let projection_matrix = Mat4::perspective_lh(fov, aspect_ratio, z_near, z_far);
 
     let mut draw_face = true;
     let mut draw_wireframe = true;
@@ -49,11 +51,6 @@ async fn main() {
             draw_normals = !draw_normals;
         }
 
-        if is_key_down(KeyCode::K) {
-            scale += 25. * get_frame_time();
-        } else if is_key_down(KeyCode::J) {
-            scale -= 25. * get_frame_time();
-        }
         if is_key_down(KeyCode::A) {
             jet.translation.x -= 25. * get_frame_time();
         } else if is_key_down(KeyCode::D) {
@@ -66,10 +63,10 @@ async fn main() {
 
         if !is_key_down(KeyCode::Space) {
             jet.rotation.y += 1. * get_frame_time();
+            jet.rotation.x += 1. * get_frame_time();
         }
 
-        let scale_matrix = Mat4::from_scale(vec3(scale, scale, scale));
-        let inv_camera_matrix = Mat4::from_translation(camera).inverse();
+        let scale_matrix = Mat4::from_scale(vec3(jet.scale.x, jet.scale.y, jet.scale.z));
         let translation_matrix = Mat4::from_translation(vec3(
             jet.translation.x,
             jet.translation.y,
@@ -79,8 +76,7 @@ async fn main() {
         let rotation_matrix_y = Mat4::from_rotation_y(jet.rotation.y);
         let rotation_matrix_z = Mat4::from_rotation_z(jet.rotation.z);
 
-        let world_matrix = inv_camera_matrix
-            * translation_matrix
+        let world_matrix = translation_matrix
             * rotation_matrix_x
             * rotation_matrix_y
             * rotation_matrix_z
@@ -93,48 +89,54 @@ async fn main() {
             let v1 = jet.vertices[t.0 - 1];
             let v2 = jet.vertices[t.1 - 1];
             let v3 = jet.vertices[t.2 - 1];
+            let color = t.3;
 
-            // Transforming the vertices.
-            let ts = |v: Vec3| (world_matrix * vec4(v.x, v.y, v.z, 1.)).xyz();
+            let to_vec4 = |v: Vec3| vec4(v.x, v.y, v.z, 1.);
 
-            let (v1, v2, v3) = (ts(v1), ts(v2), ts(v3));
+            let v1 = (world_matrix * to_vec4(v1)).xyz();
+            let v2 = (world_matrix * to_vec4(v2)).xyz();
+            let v3 = (world_matrix * to_vec4(v3)).xyz();
 
-            // Backface culling
-            let a_to_b = (v2 - v1).normalize();
-            let a_to_c = (v3 - v1).normalize();
-            let normal = a_to_b.cross(a_to_c).normalize();
+            let v1v2 = (v2 - v1).normalize();
+            let v1v3 = (v3 - v1).normalize();
+            let normal = v1v2.cross(v1v3).normalize();
             let camera_ray = camera - v1;
             let dot = normal.dot(camera_ray);
 
-            // backface culling.
+            // backface culling
+            // FIX: it should be `dot < 0.`.
             if dot > 0. {
                 continue;
             }
 
-            let project = |v: Vec3| {
-                prespective_matrix * vec4(v.x, v.y, v.z, 1.) + vec4(half_width, half_height, 0., 0.)
+            let project = |v: Vec4| {
+                let v = projection_matrix * v;
+                let v = v / v.w;
+                v.xy() * half_height * 4. + vec2(half_width, half_height)
             };
-            // Projecting the vertices.
-            let (v1, v2, v3) = (project(v1).xyz(), project(v2).xyz(), project(v3).xyz());
 
+            let v1 = project(to_vec4(v1));
+            let v2 = project(to_vec4(v2));
+            let v3 = project(to_vec4(v3));
+
+            faces.push((v1, v2, v3, color));
             normal_rays.push((v1, normal));
-            faces.push((v1, v2, v3))
         }
 
         if draw_face {
-            for (v1, v2, v3) in &faces {
+            for (v1, v2, v3, color) in &faces {
                 canvas.draw_triangle(v1.xy(), v2.xy(), v3.xy(), GRAY);
             }
         }
         if draw_wireframe {
-            for (v1, v2, v3) in &faces {
+            for (v1, v2, v3, _) in &faces {
                 canvas.draw_triangle_lines(v1.xy(), v2.xy(), v3.xy(), DARKGRAY);
             }
         }
 
         if draw_normals {
             for (vertex, normal) in normal_rays {
-                let normal_ray = vertex + (normal * scale);
+                let normal_ray = vertex.xy() + (normal.xy() * 10.);
                 canvas.draw_line(vertex.xy(), normal_ray.xy(), RED);
             }
         }

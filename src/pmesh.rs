@@ -1,10 +1,13 @@
 use crate::cube::{CUBE_FACES, CUBE_VERTICES};
 
-use macroquad::prelude::{Vec3, vec3};
+use macroquad::{
+    color::{Color, WHITE},
+    prelude::{Vec3, vec3},
+};
 
 pub struct PMesh {
     pub vertices: Vec<Vec3>,
-    pub indices: Vec<(usize, usize, usize)>,
+    pub indices: Vec<(usize, usize, usize, Color)>,
     pub rotation: Vec3,
     pub scale: Vec3,
     pub translation: Vec3,
@@ -43,7 +46,7 @@ impl PMesh {
                                 .unwrap()
                         })
                         .collect::<Vec<usize>>();
-                    indices.push((face[0], face[1], face[2]));
+                    indices.push((face[0], face[1], face[2], WHITE));
                 }
                 _ => {}
             }
